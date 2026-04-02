@@ -1,0 +1,37 @@
+# Flutter / Dart / Pub
+.dart_tool/
+.packages
+.pub-cache/
+build/
+.idea/
+*.iml
+*.lock
+*.log
+*.hprof
+
+# Android / Gradle
+gradle-wrapper.jar
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Keystore files (never commit)
+key.properties
+**/*.keystore
+**/*.jks
+
+# Firebase config files
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Visual Studio Code
+.vscode/
+
+# Misc
+*.DS_Store
+*.apk
+*.aab
