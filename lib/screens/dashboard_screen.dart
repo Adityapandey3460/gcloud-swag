@@ -299,7 +299,7 @@ class _RecentRow extends StatelessWidget {
                 Text(student.name,
                     style: const TextStyle(
                         color: AppColors.text, fontSize: 14, fontWeight: FontWeight.w500)),
-                Text(student.college,
+                Text(student.department,
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
               ],
             ),

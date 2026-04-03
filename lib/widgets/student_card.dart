@@ -117,17 +117,16 @@ class StudentCard extends StatelessWidget {
                 ...[
                   _DetailRow(
                       icon: Icons.school_outlined,
-                      label: 'College',
-                      value: student.college),
-                  if (student.phone.isNotEmpty)
+                      label: 'department',
+                      value: student.department),
                     _DetailRow(
-                        icon: Icons.phone_outlined,
-                        label: 'Phone',
-                        value: student.phone),
+                        icon: Icons.calendar_today_outlined,
+                        label: 'year',
+                        value: student.year),
                   _DetailRow(
-                      icon: Icons.calendar_today_outlined,
-                      label: 'Registered',
-                      value: fmt.format(student.registeredAt)),
+                        icon: Icons.checkroom, // Built-in shirt icon
+                        label: 'T-shirt Size',
+                        value: student.tshirtSize),
                   _DetailRow(
                       icon: Icons.badge_outlined,
                       label: 'Student ID',

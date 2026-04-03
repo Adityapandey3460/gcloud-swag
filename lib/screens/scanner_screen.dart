@@ -94,10 +94,10 @@
 //           id: _foundStudent!.id,
 //           name: _foundStudent!.name,
 //           email: _foundStudent!.email,
-//           college: _foundStudent!.college,
-//           phone: _foundStudent!.phone,
+//           department: _foundStudent!.department,
+//           year: _foundStudent!.year,
 //           claimed: true,
-//           registeredAt: _foundStudent!.registeredAt,
+//           tshirtSize: _foundStudent!.tshirtSize,
 //           claimedAt: DateTime.now(),
 //         );
 //         _processing = false;
@@ -595,10 +595,10 @@
 //         id: _foundStudent!.id,
 //         name: _foundStudent!.name,
 //         email: _foundStudent!.email,
-//         college: _foundStudent!.college,
-//         phone: _foundStudent!.phone,
+//         department: _foundStudent!.department,
+//         year: _foundStudent!.year,
 //         claimed: true,
-//         registeredAt: _foundStudent!.registeredAt,
+//         tshirtSize: _foundStudent!.tshirtSize,
 //         claimedAt: DateTime.now(),
 //       );
 //       _processing = false;
@@ -818,10 +818,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
           id: _foundStudent!.id,
           name: _foundStudent!.name,
           email: _foundStudent!.email,
-          college: _foundStudent!.college,
-          phone: _foundStudent!.phone,
+          department: _foundStudent!.department,
+          year: _foundStudent!.year,
           claimed: true,
-          registeredAt: _foundStudent!.registeredAt,
+          tshirtSize: _foundStudent!.tshirtSize,
           claimedAt: DateTime.now(),
         );
         _processing = false;

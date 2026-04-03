@@ -47,7 +47,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
             child: TextField(
               style: const TextStyle(color: AppColors.text),
               decoration: const InputDecoration(
-                hintText: 'Search name, email, college...',
+                hintText: 'Search name, email, department...',
                 prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
                 contentPadding: EdgeInsets.symmetric(vertical: 12),
               ),
@@ -90,7 +90,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                   final matchSearch = _search.isEmpty ||
                       s.name.toLowerCase().contains(_search.toLowerCase()) ||
                       s.email.toLowerCase().contains(_search.toLowerCase()) ||
-                      s.college.toLowerCase().contains(_search.toLowerCase());
+                      s.department.toLowerCase().contains(_search.toLowerCase());
                   final matchFilter = _filter == 'all' ||
                       (_filter == 'claimed' && s.claimed) ||
                       (_filter == 'pending' && !s.claimed);
@@ -165,6 +165,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                 onClaim: () async {
                   await FirebaseService.markClaimed(student.id);
                   if (mounted) Navigator.pop(context);
+                  
                 },
 
                 onScanNext: () {
@@ -243,7 +244,7 @@ class _StudentRow extends StatelessWidget {
                       style: const TextStyle(
                           color: AppColors.text, fontWeight: FontWeight.w500, fontSize: 15)),
                   const SizedBox(height: 2),
-                  Text(student.college,
+                  Text(student.department,
                       style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),

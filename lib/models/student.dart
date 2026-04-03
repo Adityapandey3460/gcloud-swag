@@ -4,34 +4,32 @@ class Student {
   final String id;
   final String name;
   final String email;
-  final String college;
-  final String phone;
+  final String department;
+  final String year;
   final bool claimed;
-  final DateTime registeredAt;
+  final String tshirtSize;
   final DateTime? claimedAt;
 
   Student({
     required this.id,
     required this.name,
     required this.email,
-    required this.college,
-    this.phone = '',
+    required this.department,
+    required this.year,
     required this.claimed,
-    required this.registeredAt,
+    required this.tshirtSize,
     this.claimedAt,
   });
 
-  factory Student.fromFirestore(Map<String, dynamic> data, String id) {
+factory Student.fromFirestore(Map<String, dynamic> data, String id) {
     return Student(
       id: id,
       name: data['name'] ?? '',
       email: data['email'] ?? '',
-      college: data['college'] ?? '',
-      phone: data['phone'] ?? '',
+      department: data['department'] ?? '',
+      year: data['year'] ?? '',
       claimed: data['claimed'] ?? false,
-      registeredAt: data['registeredAt'] != null
-          ? (data['registeredAt'] as dynamic).toDate()
-          : DateTime.now(),
+      tshirtSize: data['tshirtSize'] ?? '', 
       claimedAt: data['claimedAt'] != null
           ? (data['claimedAt'] as dynamic).toDate()
           : null,
@@ -42,10 +40,10 @@ class Student {
     return {
       'name': name,
       'email': email,
-      'college': college,
-      'phone': phone,
+      'department': department,
+      'year': year,
       'claimed': claimed,
-      'registeredAt': registeredAt,
+      'tshirtSize': tshirtSize,
       'claimedAt': claimedAt,
     };
   }

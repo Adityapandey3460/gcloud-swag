@@ -40,7 +40,7 @@ class FirebaseService {
   static Stream<List<Student>> getStudentsStream() {
     return _db
         .collection('students')
-        .orderBy('registeredAt', descending: true)
+        .orderBy('name', descending: false)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => Student.fromFirestore(d.data(), d.id))
