@@ -138,47 +138,69 @@ class _StudentsScreenState extends State<StudentsScreen> {
   }
 
   void _showDetail(Student student) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.card,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        maxChildSize: 0.95,
-        minChildSize: 0.5,
-        expand: false,
-        builder: (_, ctrl) => SingleChildScrollView(
-          controller: ctrl,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Container(
-                width: 40, height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                    color: AppColors.border, borderRadius: BorderRadius.circular(2)),
-              ),
-              StudentCard(
-                student: student,
-                onClaim: () async {
-                  await FirebaseService.markClaimed(student.id);
-                  if (mounted) Navigator.pop(context);
-                  
-                },
+  Student currentStudent = student; // local state
 
-                onScanNext: () {
-                  Navigator.pop(context);
-                  widget.onRedirectToScanner();
-                },
-              ),
-            ],
-          ),
-        ),
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: AppColors.card,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      expand: false,
+      builder: (_, ctrl) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return SingleChildScrollView(
+            controller: ctrl,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+
+                StudentCard(
+                  student: currentStudent,
+                  onClaim: () async {
+                    await FirebaseService.markClaimed(student.id);
+
+                    setModalState(() {
+                      currentStudent = Student(
+                        id: student.id,
+                        name: student.name,
+                        email: student.email,
+                        department: student.department,
+                        year: student.year,
+                        claimed: true,
+                        tshirtSize: student.tshirtSize,
+                        claimedAt: DateTime.now(),
+                      );
+                    });
+                  },
+
+                  onScanNext: () {
+                    Navigator.pop(context);
+                    widget.onRedirectToScanner();
+                  },
+                ),
+              ],
+            ),
+          );
+        },
       ),
-    );
-  }
+    ),
+  );
+}
 
   PopupMenuItem<String> _filterItem(String value, String label, String current) {
     return PopupMenuItem(

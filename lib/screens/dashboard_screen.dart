@@ -270,7 +270,7 @@ class _RecentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = DateFormat('h:mm a');
+     final fmt = DateFormat('MMM d, yyyy • h:mm a');
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
