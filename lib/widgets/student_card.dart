@@ -1,11 +1,14 @@
 // lib/widgets/student_card.dart
 
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/student.dart';
 import '../theme.dart';
+import '../services/local_storage_service.dart';
 
-class StudentCard extends StatelessWidget {
+class StudentCard extends StatefulWidget {
   final Student student;
   final VoidCallback? onClaim;
   final VoidCallback? onScanNext;
@@ -20,125 +23,179 @@ class StudentCard extends StatelessWidget {
   });
 
   @override
+  State<StudentCard> createState() => _StudentCardState();
+}
+
+class _StudentCardState extends State<StudentCard> {
+  Uint8List? _imageBytes;
+  String? _imagePath;
+
+  bool _isSaving = false;
+  bool _isLoadingFromStorage = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStudentImage();
+  }
+
+  // 📂 Load image (with loader)
+  Future<void> _loadStudentImage() async {
+    setState(() => _isLoadingFromStorage = true);
+
+    final paths =
+        await LocalStorageService.getStudentImages(widget.student.id);
+
+    if (paths.isNotEmpty) {
+      final file = File(paths.last);
+      final bytes = await file.readAsBytes();
+
+      setState(() {
+        _imageBytes = bytes;
+        _imagePath = paths.last;
+      });
+    }
+
+    setState(() => _isLoadingFromStorage = false);
+  }
+
+  // 📸 Capture
+  Future<void> _captureImage() async {
+    final image = await LocalStorageService.captureImage();
+
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+
+      setState(() {
+        _imageBytes = bytes; // ⚡ instant preview
+        _isSaving = true;
+      });
+
+      LocalStorageService.saveStudentImage(
+        widget.student.id,
+        image,
+      ).then((_) {
+        if (mounted) {
+          setState(() => _isSaving = false);
+        }
+      });
+    }
+  }
+
+  // 🔍 Full screen
+  void _openFullScreen() {
+    if (_imageBytes == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(backgroundColor: Colors.black),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.memory(_imageBytes!),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final student = widget.student;
     final fmt = DateFormat('MMM d, yyyy • h:mm a');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Status banner
+        // STATUS
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: student.claimed ? AppColors.greenBg : AppColors.blueBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: student.claimed
-                  ? AppColors.green.withOpacity(0.3)
-                  : AppColors.blue.withOpacity(0.3),
-            ),
           ),
           child: Row(
             children: [
               Icon(
-                student.claimed ? Icons.check_circle_outline : Icons.pending_outlined,
-                color: student.claimed ? AppColors.green : AppColors.blue,
-                size: 22,
+                student.claimed
+                    ? Icons.check_circle
+                    : Icons.pending_actions,
+                color:
+                    student.claimed ? AppColors.green : AppColors.blue,
               ),
               const SizedBox(width: 10),
               Text(
-                student.claimed ? 'Swag Already Claimed' : 'Eligible for Swag',
+                student.claimed
+                    ? 'Swag Already Distributed'
+                    : 'Eligible for Swag',
                 style: TextStyle(
-                  color: student.claimed ? AppColors.green : AppColors.blue,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
+                  color:
+                      student.claimed ? AppColors.green : AppColors.blue,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
         ),
+
         const SizedBox(height: 16),
 
-        // Main info card
+        // INFO CARD
         Card(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar + Name
                 Row(
                   children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: AppColors.blueBg,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Center(
-                        child: Text(
-                          student.name.isNotEmpty
-                              ? student.name.split(' ').map((w) => w[0]).take(2).join()
-                              : '??',
-                          style: const TextStyle(
-                              color: AppColors.blue,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700),
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: AppColors.blueBg,
+                      child: Text(
+                        student.name.isNotEmpty
+                            ? student.name[0]
+                            : '?',
+                        style: const TextStyle(
+                          color: AppColors.blue,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
                           Text(student.name,
                               style: const TextStyle(
-                                  color: AppColors.text,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 2),
+                                  fontWeight: FontWeight.bold)),
                           Text(student.email,
                               style: const TextStyle(
-                                  color: AppColors.textMuted, fontSize: 13)),
+                                  color: AppColors.textMuted)),
                         ],
                       ),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 20),
-                const Divider(color: AppColors.border, height: 1),
                 const SizedBox(height: 16),
+                const Divider(),
 
-                // Details grid
-                ...[
-                  _DetailRow(
-                      icon: Icons.school_outlined,
-                      label: 'department',
-                      value: student.department),
-                    _DetailRow(
-                        icon: Icons.calendar_today_outlined,
-                        label: 'year',
-                        value: student.year),
-                  _DetailRow(
-                        icon: Icons.checkroom, // Built-in shirt icon
-                        label: 'T-shirt Size',
-                        value: student.tshirtSize),
-                  _DetailRow(
-                      icon: Icons.badge_outlined,
-                      label: 'Student ID',
-                      value: student.id,
-                      mono: true),
-                  if (student.claimedAt != null)
-                    _DetailRow(
-                        icon: Icons.verified_outlined,
-                        label: 'Claimed At',
-                        value: fmt.format(student.claimedAt!),
-                        valueColor: AppColors.green),
-                ],
+                _detail(Icons.school, "Department",
+                    student.department),
+                _detail(Icons.calendar_today, "Year",
+                    student.year),
+                _detail(Icons.shopping_bag, "T-Shirt",
+                    student.tshirtSize),
+                _detail(Icons.badge, "ID", student.id),
+
+                if (student.claimedAt != null)
+                  _detail(Icons.verified, "Claimed",
+                      fmt.format(student.claimedAt!)),
               ],
             ),
           ),
@@ -146,114 +203,101 @@ class StudentCard extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        // Action buttons
-        if (student.claimed) ...[
-          Container(
+        // IMAGE SECTION
+        if (_isLoadingFromStorage)
+          const Center(child: CircularProgressIndicator()),
+
+        if (!_isLoadingFromStorage && _imageBytes != null) ...[
+          Stack(
+            children: [
+              GestureDetector(
+                onTap: _openFullScreen,
+                child: Container(
+                  height: 180,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: MemoryImage(_imageBytes!),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+
+              if (_isSaving)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                          color: Colors.white),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
+
+        // BUTTONS
+        if (!student.claimed) ...[
+          SizedBox(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.greenBg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.green.withOpacity(0.3)),
-            ),
-            child: const Column(
-              children: [
-                Icon(Icons.check_circle, color: AppColors.green, size: 36),
-                SizedBox(height: 8),
-                Text('Swag Already Distributed',
-                    style: TextStyle(
-                        color: AppColors.green,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16)),
-                SizedBox(height: 4),
-                Text('This student has already received their swag.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
-              ],
+            child: ElevatedButton.icon(
+              onPressed:
+                  widget.isProcessing ? null : widget.onClaim,
+              icon: const Icon(Icons.redeem),
+              label: const Text("Distribute Swag ✓"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.green,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
           ),
         ] else ...[
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: isProcessing ? null : onClaim,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.green,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              icon: isProcessing
-                  ? const SizedBox(
-                      height: 18, width: 18,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
-                  : const Icon(Icons.redeem_outlined, size: 22),
-              label: Text(
-                isProcessing ? 'Processing...' : 'Distribute Swag ✓',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
+            child: OutlinedButton.icon(
+              onPressed: _captureImage,
+              icon: const Icon(Icons.camera_alt),
+              label: Text(_imageBytes == null
+                  ? "Capture Student Image"
+                  : "Retake Image"),
             ),
           ),
         ],
 
         const SizedBox(height: 12),
 
-        // Scan next
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: onScanNext, // handled by parent
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.border),
-              foregroundColor: AppColors.textMuted,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-            icon: const Icon(Icons.qr_code_scanner, size: 18),
-            label: const Text('Scan Next Student'),
+            onPressed: widget.onScanNext,
+            icon: const Icon(Icons.qr_code_scanner),
+            label: const Text("Scan Next Student"),
           ),
         ),
       ],
     );
   }
-}
 
-class _DetailRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final bool mono;
-  final Color? valueColor;
-
-  const _DetailRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.mono = false,
-    this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _detail(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: AppColors.textMuted),
+          Icon(icon, size: 18, color: AppColors.textMuted),
           const SizedBox(width: 10),
-          SizedBox(
-            width: 80,
-            child: Text(label,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-          ),
+          Text("$label: "),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
-                color: valueColor ?? AppColors.text,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                fontFamily: mono ? 'monospace' : null,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
           ),
         ],

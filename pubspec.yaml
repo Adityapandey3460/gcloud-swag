@@ -10,6 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Image capture & storage
+  image_picker: ^1.1.1
+  vision_gallery_saver: ^2.0.0
+  path_provider: ^2.0.15
+  image: ^4.1.7
+
   # Firebase
   firebase_core: ^2.24.2
   firebase_auth: ^4.16.0

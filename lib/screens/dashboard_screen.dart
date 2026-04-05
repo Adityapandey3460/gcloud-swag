@@ -34,9 +34,9 @@ class DashboardScreen extends StatelessWidget {
             tooltip: 'Sign Out',
             onPressed: () async {
               await FirebaseService.signOut();
-              if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
-              }
+              // if (context.mounted) {
+              //   Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+              // }
             },
           ),
         ],

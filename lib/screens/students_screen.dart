@@ -1,6 +1,7 @@
 // lib/screens/students_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:swag_admin_app/services/local_storage_service.dart';
 import '../services/firebase_service.dart';
 import '../models/student.dart';
 import '../theme.dart';
@@ -19,14 +20,12 @@ class _StudentsScreenState extends State<StudentsScreen> {
   String _filter = 'all'; // all | claimed | pending
   Student? _selectedStudent;
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Students'),
         actions: [
-          // Filter chips
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
             color: AppColors.card,
@@ -62,7 +61,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Chip(
-                  label: Text(_filter == 'claimed' ? 'Showing: Claimed' : 'Showing: Pending'),
+                  label: Text(
+                      _filter == 'claimed' ? 'Showing: Claimed' : 'Showing: Pending'),
                   backgroundColor: AppColors.blueBg,
                   labelStyle: const TextStyle(color: AppColors.blue, fontSize: 12),
                   deleteIcon: const Icon(Icons.close, size: 14, color: AppColors.blue),
@@ -71,18 +71,20 @@ class _StudentsScreenState extends State<StudentsScreen> {
               ),
             ),
 
-          // List
+          // List of students
           Expanded(
             child: StreamBuilder<List<Student>>(
               stream: FirebaseService.getStudentsStream(),
               builder: (ctx, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: AppColors.blue));
+                  return const Center(
+                      child: CircularProgressIndicator(color: AppColors.blue));
                 }
                 if (snap.hasError) {
                   return Center(
                     child: Text('Error: ${snap.error}',
-                        style: const TextStyle(color: AppColors.red)));
+                        style: const TextStyle(color: AppColors.red)),
+                  );
                 }
 
                 final all = snap.data ?? [];
@@ -131,76 +133,70 @@ class _StudentsScreenState extends State<StudentsScreen> {
     );
   }
 
-  void _someFunction() {
-    // 2. We use 'widget.' to reach up and grab the function 
-    // passed in the constructor above.
-    widget.onRedirectToScanner(); 
-  }
-
   void _showDetail(Student student) {
-  Student currentStudent = student; // local state
+    Student currentStudent = student;
 
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: AppColors.card,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (_) => DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      maxChildSize: 0.95,
-      minChildSize: 0.5,
-      expand: false,
-      builder: (_, ctrl) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return SingleChildScrollView(
-            controller: ctrl,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-
-                StudentCard(
-                  student: currentStudent,
-                  onClaim: () async {
-                    await FirebaseService.markClaimed(student.id);
-
-                    setModalState(() {
-                      currentStudent = Student(
-                        id: student.id,
-                        name: student.name,
-                        email: student.email,
-                        department: student.department,
-                        year: student.year,
-                        claimed: true,
-                        tshirtSize: student.tshirtSize,
-                        claimedAt: DateTime.now(),
-                      );
-                    });
-                  },
-
-                  onScanNext: () {
-                    Navigator.pop(context);
-                    widget.onRedirectToScanner();
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.card,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-    ),
-  );
-}
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (_, ctrl) => StatefulBuilder(
+          builder: (context, setModalState) {
+            return SingleChildScrollView(
+              controller: ctrl,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+
+                  // StudentCard now internally handles camera
+                  StudentCard(
+                    student: currentStudent,
+                    onClaim: () async {
+                      await FirebaseService.markClaimed(student.id);
+
+                      setModalState(() {
+                        currentStudent = Student(
+                          id: student.id,
+                          name: student.name,
+                          email: student.email,
+                          department: student.department,
+                          year: student.year,
+                          claimed: true,
+                          tshirtSize: student.tshirtSize,
+                          claimedAt: DateTime.now(),
+                        );
+                      });
+                    },
+                    onScanNext: () {
+                      Navigator.pop(context);
+                      widget.onRedirectToScanner();
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 
   PopupMenuItem<String> _filterItem(String value, String label, String current) {
     return PopupMenuItem(
